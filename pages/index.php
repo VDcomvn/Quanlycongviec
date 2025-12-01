@@ -1,220 +1,155 @@
 <?php
-
-// create session
 session_start();
+include('../config.php');
 
-if (isset($_SESSION['username']) && isset($_SESSION['level'])) {
-	// include file
-	include('../layouts/header.php');
-	include('../layouts/topbar.php');
-	include('../layouts/sidebar.php');
-
-	// dem so luong nhan vien
-	$nv = "SELECT count(id) as soluong FROM nhanvien";
-	$resultNV = mysqli_query($conn, $nv);
-	$rowNV = mysqli_fetch_array($resultNV);
-	$tongNV = $rowNV['soluong'];
-
-	// dem tong so cong viec
-	$cvQuery = "SELECT COUNT(*) AS tongCongViec FROM cong_viec";
-	$resultCV = mysqli_query($conn, $cvQuery);
-	$rowCV = mysqli_fetch_assoc($resultCV);
-	$tongCongViec = $rowCV['tongCongViec'];
-
-	// dem tong so nhom
-	$nhomQuery = "SELECT COUNT(*) AS tongNhom FROM nhom";
-	$resultNhom = mysqli_query($conn, $nhomQuery);
-	$rowNhom = mysqli_fetch_assoc($resultNhom);
-	$tongNhom = $rowNhom['tongNhom'];
-
-	// dem so phong ban
-	$pb = "SELECT count(id) as soluong FROM phong_ban";
-	$resultPB = mysqli_query($conn, $pb);
-	$rowPB = mysqli_fetch_array($resultPB);
-	$tongPB = $rowPB['soluong'];
-
-	// dem so phong ban
-	$tk = "SELECT count(id) as soluong FROM tai_khoan";
-	$resultTK = mysqli_query($conn, $tk);
-	$rowTK = mysqli_fetch_array($resultTK);
-	$tongTK = $rowTK['soluong'];
-
-	// danh sach phong ban
-	$phongBan = "SELECT ma_phong_ban, ten_phong_ban, ngay_tao FROM phong_ban ORDER BY id DESC";
-	$resultPhongBan = mysqli_query($conn, $phongBan);
-	$arrPhongBan = array();
-	while ($rowPhongBan = mysqli_fetch_array($resultPhongBan)) {
-		$arrPhongBan[] = $rowPhongBan;
-	}
-
-	// danh sach chuc vu
-	$chucVu = "SELECT ma_chuc_vu, ten_chuc_vu, ngay_tao FROM chuc_vu ORDER BY id DESC";
-	$resultChucVu = mysqli_query($conn, $chucVu);
-	$arrChucVu = array();
-	while ($rowChucVu = mysqli_fetch_array($resultChucVu)) {
-		$arrChucVu[] = $rowChucVu;
-	}
-
-?>
-	<!-- Content Wrapper. Contains page content -->
-	<div class="content-wrapper">
-
-		<!-- Content Header (Page header) -->
-		<section class="content-header">
-			<h1>
-				Tổng quan
-				<small>Website quản lý người dùng</small>
-			</h1>
-		</section>
-
-		<!-- Main content -->
-		<section class="content">
-			<!-- Small boxes (Stat box) -->
-			<div class="row">
-				<div class="col-lg-4 col-xs-6">
-					<!-- small box -->
-					<div class="small-box bg-aqua">
-						<div class="inner">
-							<h3><?php echo $tongNV; ?></h3>
-
-							<p>Nhân viên</p>
-						</div>
-						<div class="icon">
-							<i class="fa fa-user"></i>
-						</div>
-						<a href="danh-sach-nhan-vien.php?p=staff&a=list-staff" class="small-box-footer">Danh sách nhân viên <i class="fa fa-arrow-circle-right"></i></a>
-					</div>
-				</div>
-
-				<!-- ./col -->
-				<div class="col-lg-4 col-xs-6">
-					<!-- small box -->
-					<div class="small-box bg-yellow">
-						<div class="inner">
-							<h3><?php echo $tongCongViec; ?></h3>
-
-							<p>Công việc</p>
-						</div>
-						<div class="icon">
-							<i class="fa fa-tasks"></i>
-						</div>
-						<a href="danh-sach-cong-viec.php?p=work&a=list-work" class="small-box-footer">Xem danh sách công việc <i class="fa fa-arrow-circle-right"></i>
-						</a>
-					</div>
-				</div>
-
-				<!-- ./col -->
-				<div class="col-lg-4 col-xs-6">
-					<!-- small box -->
-					<div class="small-box bg-green">
-						<div class="inner">
-							<h3><?php echo $tongNhom; ?></h3>
-
-							<p>Nhóm</p>
-						</div>
-						<div class="icon">
-							<i class="fa fa-users"></i>
-						</div>
-						<a href="danh-sach-nhom.php?p=group&a=list-group" class="small-box-footer">Xem danh sách nhóm <i class="fa fa-arrow-circle-right"></i>
-						</a>
-					</div>
-				</div>
-
-			<!-- Main row -->
-			<div class="row">
-				<div class="col-lg-6">
-					<div class="box">
-						<div class="box-header">
-							<h3 class="box-title">Danh sách phòng ban</h3>
-						</div>
-						<!-- /.box-header -->
-						<div class="box-body">
-							<div class="table-responsive">
-								<table id="example1" class="table table-bordered table-striped">
-									<thead>
-										<tr>
-											<th>STT</th>
-											<th>Mã Phòng</th>
-											<th>Tên phòng</th>
-											<th>Ngày tạo</th>
-										</tr>
-									</thead>
-									<tbody>
-										<?php
-										$count = 1;
-										foreach ($arrPhongBan as $pb) {
-										?>
-											<tr>
-												<td><?php echo $count; ?></td>
-												<td><?php echo $pb['ma_phong_ban']; ?></td>
-												<td><?php echo $pb['ten_phong_ban']; ?></td>
-												<td><?php echo $pb['ngay_tao']; ?></td>
-											</tr>
-										<?php
-											$count++;
-										}
-										?>
-									</tbody>
-								</table>
-							</div>
-						</div>
-						<!-- /.box-body -->
-					</div>
-					<!-- /.box -->
-				</div>
-				<!-- col-lg-6 -->
-				<div class="col-lg-6">
-					<div class="box">
-						<div class="box-header">
-							<h3 class="box-title">Danh sách chức vụ</h3>
-						</div>
-						<!-- /.box-header -->
-						<div class="box-body">
-							<div class="table-responsive">
-								<table id="example3" class="table table-bordered table-striped">
-									<thead>
-										<tr>
-											<th>STT</th>
-											<th>Mã chức vụ</th>
-											<th>Tên chức vụ</th>
-											<th>Ngày tạo</th>
-										</tr>
-									</thead>
-									<tbody>
-										<?php
-										$count = 1;
-										foreach ($arrChucVu as $cv) {
-										?>
-											<tr>
-												<td><?php echo $count; ?></td>
-												<td><?php echo $cv['ma_chuc_vu']; ?></td>
-												<td><?php echo $cv['ten_chuc_vu']; ?></td>
-												<td><?php echo $cv['ngay_tao']; ?></td>
-											</tr>
-										<?php
-											$count++;
-										}
-										?>
-									</tbody>
-								</table>
-							</div>
-						</div>
-						<!-- /.box-body -->
-					</div>
-					<!-- /.box -->
-				</div>
-			</div>
-			<!-- /.row (main row) -->
-		</section>
-		<!-- /.content -->
-	</div>
-	<!-- /.content-wrapper -->
-<?php
-	// include
-	include('../layouts/footer.php');
-} else {
-	// go to pages login
-	header('Location: dang-nhap.php');
+if (!isset($_SESSION['username']) || !isset($_SESSION['level'])) {
+    header('Location: dang-nhap.php');
+    exit;
 }
 
+// ===== Lấy dữ liệu từ DB =====
+$conn or die("Không kết nối được DB");
+
+// Số lượng nhân viên
+$nv = "SELECT COUNT(id) as soluong FROM nhanvien";
+$resultNV = mysqli_query($conn, $nv);
+$rowNV = mysqli_fetch_assoc($resultNV);
+$tongNV = $rowNV['soluong'];
+
+// Số công việc
+$cv = "SELECT COUNT(*) as tongCV FROM cong_viec";
+$resultCV = mysqli_query($conn, $cv);
+$rowCV = mysqli_fetch_assoc($resultCV);
+$tongCV = $rowCV['tongCV'];
+
+// Số nhóm
+$nhom = "SELECT COUNT(*) as tongNhom FROM nhom";
+$resultNhom = mysqli_query($conn, $nhom);
+$rowNhom = mysqli_fetch_assoc($resultNhom);
+$tongNhom = $rowNhom['tongNhom'];
+
+// Số phòng ban
+$pb = "SELECT COUNT(id) as tongPB FROM phong_ban";
+$resultPB = mysqli_query($conn, $pb);
+$rowPB = mysqli_fetch_assoc($resultPB);
+$tongPB = $rowPB['tongPB'];
+
+// Danh sách phòng ban
+$phongBan = "SELECT ma_phong_ban, ten_phong_ban, ngay_tao FROM phong_ban ORDER BY id DESC";
+$resultPhongBan = mysqli_query($conn, $phongBan);
+$arrPhongBan = [];
+while($row = mysqli_fetch_assoc($resultPhongBan)){
+    $arrPhongBan[] = $row;
+}
+
+// Danh sách chức vụ
+$chucVu = "SELECT ma_chuc_vu, ten_chuc_vu, ngay_tao FROM chuc_vu ORDER BY id DESC";
+$resultChucVu = mysqli_query($conn, $chucVu);
+$arrChucVu = [];
+while($row = mysqli_fetch_assoc($resultChucVu)){
+    $arrChucVu[] = $row;
+}
 ?>
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tổng quan</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body { background: #f1f0f5f9; font-family: 'Segoe UI', sans-serif; }
+.navbar { background: #6e8cfbff; }
+.navbar .navbar-brand, .navbar-text { color: #fffffff7; }
+.sidebar { width:220px; height:100vh; background:#fff; position:fixed; top:0; left:0; padding:20px; box-shadow:2px 0 5px rgba(0,0,0,0.1);}
+.sidebar a { display:block; margin:10px 0; color:#333; text-decoration:none; }
+.sidebar a:hover { color:#6e8efb; }
+.content { margin-left:240px; padding:40px; }
+
+.card-stat { border-radius:10px; color:#fff; padding:20px; text-align:center; }
+.card-stat i { font-size:40px; margin-bottom:10px; }
+.bg-aqua { background:#17a2b8; }
+.bg-yellow { background:#ffc107; }
+.bg-green { background:#28a745; }
+.bg-purple { background:#6f42c1; }
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">QL Người Dùng</a>
+        <div class="d-flex">
+            <span class="navbar-text me-3 text-white">Xin chào, <?php echo $_SESSION['username']; ?></span>
+            <a href="dang-xuat.php" class="btn btn-outline-light btn-sm">Đăng xuất</a>
+        </div>
+    </div>
+</nav>
+
+<div class="sidebar">
+    <a href="index.php"><i class="fas fa-chart-line"></i> Tổng quan</a>
+    <a href="danh-sach-nhan-vien.php?p=staff&a=list-staff"><i class="fas fa-user"></i> Nhân viên</a>
+    <a href="danh-sach-cong-viec.php?p=work&a=list-work"><i class="fas fa-tasks"></i> Công việc</a>
+    <a href="danh-sach-nhom.php?p=group&a=list-group"><i class="fas fa-users"></i> Nhóm</a>
+    <a href="danh-sach-phong-ban.php?p=dept&a=list-dept"><i class="fas fa-building"></i> Phòng ban</a>
+</div>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row g-4 mb-4">
+            <div class="col-md-3"><div class="card-stat bg-aqua"><i class="fas fa-user"></i><h3><?php echo $tongNV; ?></h3><p>Nhân viên</p></div></div>
+            <div class="col-md-3"><div class="card-stat bg-yellow"><i class="fas fa-tasks"></i><h3><?php echo $tongCV; ?></h3><p>Công việc</p></div></div>
+            <div class="col-md-3"><div class="card-stat bg-green"><i class="fas fa-users"></i><h3><?php echo $tongNhom; ?></h3><p>Nhóm</p></div></div>
+            <div class="col-md-3"><div class="card-stat bg-purple"><i class="fas fa-building"></i><h3><?php echo $tongPB; ?></h3><p>Phòng ban</p></div></div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <h5>Danh sách phòng ban</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr><th>STT</th><th>Mã Phòng</th><th>Tên phòng</th><th>Ngày tạo</th></tr>
+                        </thead>
+                        <tbody>
+                            <?php $count=1; foreach($arrPhongBan as $pb): ?>
+                            <tr>
+                                <td><?php echo $count++; ?></td>
+                                <td><?php echo $pb['ma_phong_ban']; ?></td>
+                                <td><?php echo $pb['ten_phong_ban']; ?></td>
+                                <td><?php echo $pb['ngay_tao']; ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <h5>Danh sách chức vụ</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr><th>STT</th><th>Mã chức vụ</th><th>Tên chức vụ</th><th>Ngày tạo</th></tr>
+                        </thead>
+                        <tbody>
+                            <?php $count=1; foreach($arrChucVu as $cv): ?>
+                            <tr>
+                                <td><?php echo $count++; ?></td>
+                                <td><?php echo $cv['ma_chuc_vu']; ?></td>
+                                <td><?php echo $cv['ten_chuc_vu']; ?></td>
+                                <td><?php echo $cv['ngay_tao']; ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
