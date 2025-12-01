@@ -1,6 +1,6 @@
 <?php
 session_start();
-include('../config.php');
+include('../config.php'); 
 
 if (!isset($_SESSION['username']) || !isset($_SESSION['level'])) {
     header('Location: dang-nhap.php');
