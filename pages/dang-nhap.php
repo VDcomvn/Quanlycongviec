@@ -1,58 +1,48 @@
 <?php
 session_start();
-error_reporting(0);
-
 include('../config.php');
 
-if (isset($_SESSION['username']) && isset($_SESSION['level'])) {
-    header("Location: index.php");
-} else {
+if (!isset($_SESSION['username']) || !isset($_SESSION['level'])) {
+    header('Location: dang-nhap.php');
+    exit;
+}
 
-    if (isset($_POST['login'])) {
-        $error = array();
-        $success = array();
-        $showMess = false;
+$conn or die("Không kết nối được DB");
 
-        // validate form 
-        if (empty($_POST['email'])) {
-            $error['email'] = 'Bạn chưa nhập <b>email</b>';
-        }
+// Số lượng nhân viên
+$nv = "SELECT COUNT(id) as soluong FROM nhanvien";
+$resultNV = mysqli_query($conn, $nv);
+$rowNV = mysqli_fetch_assoc($resultNV);
+$tongNV = $rowNV['soluong'];
 
-        if (empty($_POST['password'])) {
-            $error['password'] = 'Bạn chưa nhập <b>mật khẩu</b>';
-        }
+$cv = "SELECT COUNT(*) as tongCV FROM cong_viec";
+$resultCV = mysqli_query($conn, $cv);
+$rowCV = mysqli_fetch_assoc($resultCV);
+$tongCV = $rowCV['tongCV'];
 
-        if (!$error) {
-            $email = $_POST['email'];
-            $password = md5($_POST['password']);
+$nhom = "SELECT COUNT(*) as tongNhom FROM nhom";
+$resultNhom = mysqli_query($conn, $nhom);
+$rowNhom = mysqli_fetch_assoc($resultNhom);
+$tongNhom = $rowNhom['tongNhom'];
 
-            $check = "SELECT email, mat_khau, quyen, truy_cap FROM tai_khoan WHERE email = '$email'";
-            $result = mysqli_query($conn, $check);
-            $row = mysqli_fetch_array($result);
-            $level = $row['quyen'];
+$pb = "SELECT COUNT(*) as tongPB FROM phong_ban";
+$resultPB = mysqli_query($conn, $pb);
+$rowPB = mysqli_fetch_assoc($resultPB);
+$tongPB = $rowPB['tongPB'];
 
-            if (mysqli_num_rows($result) == 1) {
-                if ($row['mat_khau'] == $password) {
-                    $showMess = true;
-                    $_SESSION['username'] = $email;
-                    $_SESSION['level'] = $level;
+$phongBan = "SELECT ma_phong_ban, ten_phong_ban, ngay_tao FROM phong_ban ORDER BY id DESC";
+$resultPhongBan = mysqli_query($conn, $phongBan);
+$arrPhongBan = [];
+while($row = mysqli_fetch_assoc($resultPhongBan)){
+    $arrPhongBan[] = $row;
+}
 
-                    $access = $row['truy_cap'] + 1;
-                    $update = "UPDATE tai_khoan SET truy_cap = $access WHERE email = '$email'";
-                    mysqli_query($conn, $update);
-
-                    $success['mess'] = 'Đăng nhập thành công';
-                    header("Refresh: 1; index.php?p=index&a=statistic");
-                } else {
-                    $error['check'] = 'Nhập sai <b>mật khẩu</b>. Vui lòng thử lại';
-                    $_SESSION['last_email'] = $email; // lưu email để tự điền
-                }
-            } else {
-                $error['check'] = 'Nhập sai <b>Email</b>. Vui lòng thử lại';
-                $_SESSION['last_email'] = $email; // lưu email để tự điền
-            }
-        }
-    }
+$chucVu = "SELECT ma_chuc_vu, ten_chuc_vu, ngay_tao FROM chuc_vu ORDER BY id DESC";
+$resultChucVu = mysqli_query($conn, $chucVu);
+$arrChucVu = [];
+while($row = mysqli_fetch_assoc($resultChucVu)){
+    $arrChucVu[] = $row;
+}
 ?>
 
 <!DOCTYPE html>
@@ -60,211 +50,132 @@ if (isset($_SESSION['username']) && isset($_SESSION['level'])) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Đăng Nhập</title>
+<title>Dashboard</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <style>
-            /* Reset CSS */
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
+body { font-family: 'Segoe UI', sans-serif; background:#f0f2f5; margin:0; }
+.navbar { background:#6e8efb; }
+.navbar .navbar-brand, .navbar-text { color:#fff; }
+.sidebar { width:220px; height:100vh; background:#fff; position:fixed; top:0; left:0; padding:20px; box-shadow:2px 0 5px rgba(0,0,0,0.1);}
+.sidebar a { display:block; margin:10px 0; color:#333; text-decoration:none; }
+.sidebar a:hover { color:#6e8efb; }
+.content { margin-left:240px; padding:40px; }
 
-            body {
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background: #6e8efb;
-                background-size: 300% 300%;
-                animation: gradient-animation 5s infinite;
-                height: 100vh;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
+.card-stat { border-radius:10px; color:#fff; padding:20px; text-align:center; }
+.card-stat i { font-size:40px; margin-bottom:10px; }
+.bg-aqua { background:#17a2b8; }
+.bg-yellow { background:#ffc107; }
+.bg-green { background:#28a745; }
+.bg-purple { background:#6f42c1; }
 
-            @keyframes gradient-animation {
-                0% {
-                    background-position: 0% 50%;
-                }
-
-                50% {
-                    background-position: 100% 50%;
-                }
-
-                100% {
-background-position: 0% 50%;
-                }
-            }
-
-            .login-container {
-                background: rgba(255, 255, 255, 0.9);
-                padding: 40px;
-                border-radius: 15px;
-                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-                width: 100%;
-                max-width: 400px;
-                text-align: center;
-                backdrop-filter: blur(10px);
-            }
-
-            .login-form h2 {
-                margin-bottom: 20px;
-                color: #333333;
-                font-size: 24px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 10px;
-            }
-
-            .login-form h2 i {
-                color: #6e8efb;
-            }
-
-            .input-group {
-                margin-bottom: 20px;
-                text-align: left;
-                position: relative;
-            }
-
-            .input-group label {
-                display: block;
-                margin-bottom: 5px;
-                color: #555555;
-                font-size: 14px;
-                display: flex;
-                align-items: center;
-                gap: 5px;
-            }
-
-            .input-group input {
-                width: 100%;
-                padding: 12px 10px 12px 35px;
-                border: 2px solid #dddddd;
-                border-radius: 8px;
-                font-size: 16px;
-                transition: all 0.3s ease;
-                background: transparent;
-            }
-
-            .input-group input:focus {
-                border-color: #6e8efb;
-                box-shadow: 0 0 8px rgba(110, 142, 251, 0.5);
-            }
-
-            .input-group i {
-                position: absolute;
-                left: 10px;
-                top: 67%;
-                transform: translateY(-50%);
-                color: #aaaaaa;
-            }
-
-            .login-button {
-                width: 100%;
-                padding: 12px;
-                background: #6e8efb;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                font-size: 16px;
-                cursor: pointer;
-                transition: background 0.3s ease, transform 0.3s ease;
-            }
-
-            .login-button:hover {
-                background: #5a7de2;
-                transform: scale(1.05);
-            }
-
-            .forgot-password {
-                margin-top: 15px;
-                font-size: 14px;
-            }
-
-            .forgot-password a {
-                color: #6e8efb;
-                text-decoration: none;
-                transition: color 0.3s ease;
-                display: flex;
-                align-items: center;
-                gap: 5px;
-            }
-
-            .forgot-password a:hover {
-                color: #5a7de2;
-            }
-        </style>
+.table-responsive { margin-top:20px; }
+</style>
 </head>
 <body>
 
-<?php
-if (isset($error)) {
-    if ($showMess == false) {
-        foreach ($error as $err) {
-echo "<script>alert('". $err ."')</script>";
-        }
-    }
-}
-?>
-
-<div class="login-container">
-    <form class="login-form box" method="POST" name="form1" autocomplete="on">
-        <h2><i class="fas fa-user-circle"></i> Đăng Nhập</h2>
-        <div class="input-group">
-            <span class="error animated tada" id="msg"></span>
+<nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">QL Người Dùng</a>
+        <div class="d-flex">
+            <span class="navbar-text me-3 text-white">Xin chào, <?php echo $_SESSION['username']; ?></span>
+            <a href="dang-xuat.php" class="btn btn-outline-light btn-sm">Đăng xuất</a>
         </div>
+    </div>
+</nav>
 
-        <div class="input-group">
-            <label for="username"><i class="fas fa-user"></i> Tên đăng nhập</label>
-            <input type="text" id="username" placeholder="Nhập tên đăng nhập" required 
-                   name="email" autocomplete="username"
-                   value="<?php 
-                        echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : 
-                             (isset($_SESSION['last_email']) ? htmlspecialchars($_SESSION['last_email']) : ''); 
-                   ?>">
-        </div>
-
-        <div class="input-group">
-            <label for="password"><i class="fas fa-lock"></i> Mật khẩu</label>
-            <input type="password" name="password" id="pwd" placeholder="Nhập mật khẩu" required
-                   autocomplete="current-password">
-        </div>
-
-        <input type="submit" value="Đăng nhập" name="login" class="login-button">
-        
-    </form>
+<div class="sidebar">
+    <a href="index.php"><i class="fas fa-chart-line"></i> Tổng quan</a>
+    <a href="danh-sach-nhan-vien.php?p=staff&a=list-staff"><i class="fas fa-user"></i> Nhân viên</a>
+    <a href="danh-sach-cong-viec.php?p=work&a=list-work"><i class="fas fa-tasks"></i> Công việc</a>
+    <a href="danh-sach-nhom.php?p=group&a=list-group"><i class="fas fa-users"></i> Nhóm</a>
+    <a href="danh-sach-phong-ban.php?p=dept&a=list-dept"><i class="fas fa-building"></i> Phòng ban</a>
 </div>
 
-<script>
-function checkStuff() {
-    var email = document.form1.email;
-    var password = document.form1.password;
-    var msg = document.getElementById('msg');
+<div class="content">
 
-    if (email.value == "") {
-        msg.style.display = 'block';
-        msg.innerHTML = "Please enter your email";
-        email.focus();
-        return false;
-    } else { msg.innerHTML = ""; }
+    <div class="container-fluid">
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="card-stat bg-aqua">
+                    <i class="fas fa-user"></i>
+                    <h3><?php echo $tongNV; ?></h3>
+                    <p>Nhân viên</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card-stat bg-yellow">
+                    <i class="fas fa-tasks"></i>
+                    <h3><?php echo $tongCV; ?></h3>
+                    <p>Công việc</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card-stat bg-green">
+                    <i class="fas fa-users"></i>
+                    <h3><?php echo $tongNhom; ?></h3>
+                    <p>Nhóm</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card-stat bg-purple">
+                    <i class="fas fa-building"></i>
+                    <h3><?php echo $tongPB; ?></h3>
+                    <p>Phòng ban</p>
+                </div>
+            </div>
+        </div>
 
-    if (password.value == "") {
-        msg.innerHTML = "Please enter your password";
-        password.focus();
-        return false;
-    } else { msg.innerHTML = ""; }
+        <div class="table-responsive">
+            <h4>Danh sách phòng ban</h4>
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Mã phòng</th>
+                        <th>Tên phòng</th>
+                        <th>Ngày tạo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php $count=1; foreach($arrPhongBan as $pb): ?>
+                    <tr>
+                        <td><?php echo $count++; ?></td>
+                        <td><?php echo $pb['ma_phong_ban']; ?></td>
+                        <td><?php echo $pb['ten_phong_ban']; ?></td>
+                        <td><?php echo $pb['ngay_tao']; ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
 
-    var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    if (!re.test(email.value)) {
-        msg.innerHTML = "Please enter a valid email";
-        email.focus();
-        return false;
-    } else { msg.innerHTML = ""; }
-}
-</script>
+        <div class="table-responsive">
+            <h4>Danh sách chức vụ</h4>
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Mã chức vụ</th>
+                        <th>Tên chức vụ</th>
+                        <th>Ngày tạo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php $count=1; foreach($arrChucVu as $cv): ?>
+                    <tr>
+                        <td><?php echo $count++; ?></td>
+                        <td><?php echo $cv['ma_chuc_vu']; ?></td>
+                        <td><?php echo $cv['ten_chuc_vu']; ?></td>
+                        <td><?php echo $cv['ngay_tao']; ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
 </body>
 </html>
-
-<?php
-} // end else
-?>
